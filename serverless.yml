@@ -1,0 +1,99 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: blue-green-deployment
+
+custom:
+  bucket: ${file(./env.yml):${self:custom.stage}.bucket}
+  profile: ${file(./env.yml):${self:custom.stage}.profile}
+  region: ${file(./env.yml):${self:custom.stage}.region}
+  stage: ${opt:stage, self:provider.stage}
+  suffix: ${self:service}-${self:custom.stage}
+  prefix: ${self:custom.stage}-${self:service}
+  process: process-${self:custom.suffix}
+
+provider:
+  name: aws
+  runtime: python3.6
+  environment: ${file(./env.yml):${self:custom.stage}}
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  profile: ${self:custom.profile}
+  deploymentBucket: ${self:custom.bucket}
+
+  iamRoleStatements:
+    # provide access permission to existing deployment bucket
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:ListBucket
+        - s3:GetObject
+      Resource: arn:aws:s3:::${self:custom.bucket}/*
+    - Effect: Allow
+      Action:
+        - ssm:DescribeParameters
+        - ssm:GetParameter
+        - ssm:GetParameters
+        - ssm:GetParameterHistory
+        - ssm:PutParameter
+      Resource: arn:aws:ssm:${self:custom.region}:*:parameter/*
+    - Effect: Allow
+      Action:
+        - ec2:*
+        - autoscaling:*
+        - elasticloadbalancing:*
+      Resource: '*'
+
+functions:
+  switch:
+    name: ${self:custom.process}
+    handler: handler.switch
+
+# Additional Resources required by the serverless code to do its job
+resources:
+  Resources:
+    prodElbParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: '/prod/prod_elb'
+        Description: 'Parameter Store for Current Production ELB Name'
+        Type: 'String'
+        Value: 'Null'
+    tempElbParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: '/prod/temp_elb'
+        Description: 'Parameter Store for Temp Production ELB Name'
+        Type: 'String'
+        Value: 'Null'
+    prodAsgParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: '/prod/prod_asg'
+        Description: 'Parameter Store for Current Production ASG Name'
+        Type: 'String'
+        Value: 'Null'
+    newAsgParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: '/prod/temp_asg'
+        Description: 'Parameter Store for New Production ASG Name'
+        Type: 'String'
+        Value: 'Null'
+    DeploymentStateParameter:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: '/prod/deployment/current_state'
+        Description: 'Parameter Store for the Active Prod Server State'
+        Type: 'String'
+        Value: 'Null'
