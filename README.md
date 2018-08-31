@@ -5,7 +5,7 @@ This is an AWS Lambda Function that will perform a server switch process called 
 ## Requirements
 - python 3.6
 - awscli (install via python pip command - recommended)
-- serverless framework
+- [serverless framework](https://serverless.com/)
 - JSON/YAML
 - AWS Client Configuration with Correct AWS KEY and AWS SECRET or AWS ASSUME ROLE Configured
 
