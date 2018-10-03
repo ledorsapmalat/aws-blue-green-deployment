@@ -9,6 +9,9 @@ This is an AWS Lambda Function that will perform a server switch process called 
 - JSON/YAML
 - AWS Client Configuration with Correct AWS KEY and AWS SECRET or AWS ASSUME ROLE Configured
 
+### Assumption
+This assumes that a Production ELB, ASG and EC2 instances exists. A new ELB, ASG, EC2 instances are created for a switch over using SSM Parameters.
+
 ### SSM Parameter
 
 The SSM Parameter was used to hold Elastic Load Balancer Name and Autoscaling Group Name and the current state of the deployment whether it is a Blue or a Green.
